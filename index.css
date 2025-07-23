@@ -59,7 +59,7 @@ body {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    width: 360px;
+    width: 100%;
 }
 
 .title-wrapper {
