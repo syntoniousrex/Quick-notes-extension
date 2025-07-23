@@ -1,0 +1,68 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="index_new.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Nunito'>
+        <script src="lib/Sortable.min.js"></script>
+    </head>
+    <body>
+        <div id="settings_menu" style="display: none;">
+            <i id="close_settings" class="fa-solid fa-angle-left" style="color: white; position: absolute; top: 20; left: 20; font-size: 30px;"></i>
+            <div id="settings_container">
+                <ul>
+                    <li>Light mode</li>
+                    <li>
+                        <button id="clear-cache" class="settings-button">
+                            <i class="fa-solid fa-trash-can"></i> Clear Cache
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div id="switch_container">
+                <label class="switch">
+                    <input type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+        </div>
+        <header>
+            <i class="fa-solid fa-gear" id="settings"></i>
+            <i id="newNote" class="fa-regular fa-note-sticky"></i>
+            <div style="text-align: center;">
+                <h1 style="
+                font-family: Nunito;
+                font-size: 45px;
+                color: rgb(255, 255, 255);">
+                Notes
+                </h1>
+            </div>
+        </header>
+        <div id="search-bar" class="shadow">
+            <img src="./images/search_icon.webp" alt="Search" id="search-icon">
+            <input type="text" id="search-input" placeholder="Search notes...">
+        </div>
+        <div class="mainBox">
+        </div>
+        <!-- Hidden template note -->
+        <template id="note-template">
+            <div class="note shadow">
+                <div class="note-actions">
+                    <div class="style-actions">
+                        <i class="action fa-solid fa-bold" data-type="bold"></i>
+                        <i class="action fa-solid fa-italic" data-type="italic"></i>
+                        <i class="action fa-solid fa-underline" data-type="underline"></i>
+                        <i class="action fa-solid fa-highlighter" data-type="hiliteColor" data-value="yellow"></i>
+                        <i class="action fa-solid fa-link" style="float: left;" data-type="createLink"></i>
+                    </div>
+                    <input type="text" class="note-title" placeholder="Title...">
+                    <div class="trash-action">
+                        <i class="action fa-solid fa-trash-can" style="float: right;"></i>
+                    </div>
+                </div>
+                <div contenteditable="true" class="noteContents" data-placeholder="Start typing..."></div>
+                <div class="word-count">0</div>
+            </div>
+        </template>
+    </body>
+    <script src="background.js"></script>
+</html>
