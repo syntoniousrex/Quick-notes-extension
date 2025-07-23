@@ -15,11 +15,13 @@
 #newNote {
     font-size: 50px;
     color: white;
+    margin-right: 20px;
 }
 
 .fa-gear {
     font-size: 40px;
     color: white;
+    margin-left: 20px;
 }
 
 * {
@@ -44,9 +46,11 @@ body {
 }
 
 .mainBox {
-    width: 360px;
+    width: 100%;
     min-height: 100vh;
-    margin: 20px;
+    margin: 20px 0;
+    padding-left: 20px;
+    padding-right: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -60,6 +64,7 @@ body {
     grid-template-columns: auto 1fr auto;
     align-items: center;
     width: 100%;
+    padding-top: 5px;
 }
 
 .title-wrapper {
@@ -74,7 +79,8 @@ body {
 }
 
 #search-bar {
-    width: 350px;
+    width: calc(100% - 40px);
+    margin: 20px 20px 0;
     border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: white;
@@ -104,9 +110,10 @@ body {
 }
 
 .note {
+    position: relative;
     width: 100%;
     min-height: 125px;
-    padding: 10px;
+    padding: 5px;
     margin-bottom: 12px;
     background-color: #222;
     border-radius: 10px;
@@ -127,8 +134,9 @@ body {
     font-weight: 600;
     outline: none;
     padding: 4px 2px;
-    margin: 0 10px;
+    margin: 0;
     flex-grow: 1;
+    min-width: 0;
     transition: all 0.2s ease;
 }
 
@@ -181,6 +189,7 @@ body {
 .note-actions {
     display: flex;
     align-items: center;
+    gap: 5px;
 }
 
 .style-actions,
@@ -191,6 +200,14 @@ body {
     box-shadow:
         inset 2px 2px 4px rgba(0, 0, 0, 0.3),
         inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+}
+
+.style-actions {
+    display: flex;
+}
+
+.trash-action {
+    flex-shrink: 0;
 }
 
 .action {
@@ -209,6 +226,14 @@ body {
     background-color: white;
     -webkit-text-fill-color: #222;
     transform: scale(1.1);
+}
+
+.word-count {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 @keyframes fadeSlideIn {
