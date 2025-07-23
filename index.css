@@ -38,8 +38,7 @@ body {
        of the first tile. */
     background-position: -10px -10px;
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    justify-content: center;
 }
 
 .mainBox {
@@ -58,7 +57,7 @@ body {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    width: 360px;
+    width: 100%;
 }
 
 .title-wrapper {
