@@ -24,6 +24,23 @@
     margin-left: 20px;
 }
 
+/* Settings menu overlay */
+#settings_menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    padding-top: 40px;
+}
+
+#settings_menu.expanded {
+    display: block;
+}
+
 * {
     margin: 0;
     padding: 0;
