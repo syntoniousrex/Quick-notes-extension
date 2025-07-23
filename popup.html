@@ -25,23 +25,18 @@
                 </label>
             </div>
         </div>
-        <header>
+        <header class="header">
             <i class="fa-solid fa-gear" id="settings"></i>
-            <i id="newNote" class="fa-regular fa-note-sticky"></i>
-            <div style="text-align: center;">
-                <h1 style="
-                font-family: Nunito;
-                font-size: 45px;
-                color: rgb(255, 255, 255);">
-                Notes
-                </h1>
+            <div class="title-wrapper">
+                <h1 class="title">Notes</h1>
             </div>
+            <i id="newNote" class="fa-regular fa-note-sticky"></i>
         </header>
         <div id="search-bar" class="shadow">
             <img src="./images/search_icon.webp" alt="Search" id="search-icon">
             <input type="text" id="search-input" placeholder="Search notes...">
         </div>
-        <div class="mainBox">
+        <div id="mainBox" class="mainBox">
         </div>
         <!-- Hidden template note -->
         <template id="note-template">
