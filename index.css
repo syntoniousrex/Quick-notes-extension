@@ -47,6 +47,8 @@ body {
     width: 360px;
     min-height: 100vh;
     margin: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -104,9 +106,10 @@ body {
 }
 
 .note {
+    position: relative;
     width: 100%;
     min-height: 125px;
-    padding: 10px;
+    padding: 5px;
     margin-bottom: 12px;
     background-color: #222;
     border-radius: 10px;
@@ -127,7 +130,7 @@ body {
     font-weight: 600;
     outline: none;
     padding: 4px 2px;
-    margin: 0 10px;
+    margin: 0 5px;
     flex-grow: 1;
     transition: all 0.2s ease;
 }
@@ -181,6 +184,7 @@ body {
 .note-actions {
     display: flex;
     align-items: center;
+    gap: 5px;
 }
 
 .style-actions,
@@ -191,6 +195,14 @@ body {
     box-shadow:
         inset 2px 2px 4px rgba(0, 0, 0, 0.3),
         inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+}
+
+.style-actions {
+    display: flex;
+}
+
+.trash-action {
+    margin-left: auto;
 }
 
 .action {
@@ -209,6 +221,14 @@ body {
     background-color: white;
     -webkit-text-fill-color: #222;
     transform: scale(1.1);
+}
+
+.word-count {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 @keyframes fadeSlideIn {
