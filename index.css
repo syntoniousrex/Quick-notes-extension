@@ -54,9 +54,21 @@ body {
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
+    width: 100%;
+}
+
+.title-wrapper {
+    text-align: center;
+}
+
+.title {
+    font-family: Nunito;
+    font-size: 45px;
+    color: rgb(255, 255, 255);
+    margin: 0;
 }
 
 #search-bar {
