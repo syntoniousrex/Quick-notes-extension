@@ -43,6 +43,7 @@ const close_settings = document.getElementById("close_settings");
 const settings_menu = document.getElementById("settings_menu");
 const newNoteButton = document.getElementById("newNote");
 const clearCacheButton = document.getElementById("clear-cache");
+const exportNotesButton = document.getElementById("export-notes");
 const searchInput = document.getElementById("search-input");
 const container = document.getElementById("mainBox"); // used for search filtering
 
@@ -211,7 +212,21 @@ function clearAllNotes() {
     newNote();
 }
 
+function exportNotes() {
+    const data = JSON.stringify(array, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "notes.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 clearCacheButton.onclick = clearAllNotes;
+exportNotesButton.onclick = exportNotes;
 
 window.onload = () => {
     console.log("[onload] Extension loaded");
