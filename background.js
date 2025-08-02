@@ -43,8 +43,25 @@ const close_settings = document.getElementById("close_settings");
 const settings_menu = document.getElementById("settings_menu");
 const newNoteButton = document.getElementById("newNote");
 const clearCacheButton = document.getElementById("clear-cache");
+const exportButton = document.getElementById("export-notes");
+const lightModeToggle = document.getElementById("light-mode-toggle");
 const searchInput = document.getElementById("search-input");
 const container = document.getElementById("mainBox"); // used for search filtering
+
+if (lightModeToggle) {
+    chrome.storage.sync.get("lightMode", (res) => {
+        if (res.lightMode) {
+            body.classList.add("light-mode");
+            lightModeToggle.checked = true;
+        }
+    });
+
+    lightModeToggle.addEventListener("change", () => {
+        const enabled = lightModeToggle.checked;
+        body.classList.toggle("light-mode", enabled);
+        chrome.storage.sync.set({ lightMode: enabled });
+    });
+}
 
 /*************************************
 * NOTE CONSTRUCTORS
@@ -211,7 +228,33 @@ function clearAllNotes() {
     newNote();
 }
 
+function exportNotes() {
+    chrome.storage.sync.get("Table", (result) => {
+        let data = [];
+        if (result["Table"]) {
+            try {
+                data = JSON.parse(result["Table"]);
+            } catch (e) {
+                console.error("Error parsing Table:", e);
+            }
+        }
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "notes-export.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log("[exportNotes] Notes exported");
+    });
+}
+
 clearCacheButton.onclick = clearAllNotes;
+exportButton.onclick = exportNotes;
 
 window.onload = () => {
     console.log("[onload] Extension loaded");
@@ -223,11 +266,11 @@ window.onload = () => {
 function setupUI() {
     // Settings toggle
     settings.onclick = () => {
-        settings_menu.classList.toggle("expanded");
+        settings_menu.classList.toggle("open");
     };
 
     close_settings.onclick = () => {
-        settings_menu.classList.remove("expanded");
+        settings_menu.classList.remove("open");
     };
 
     // Search functionality
