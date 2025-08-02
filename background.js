@@ -250,12 +250,11 @@ window.onload = () => {
 function setupUI() {
     // Settings toggle
     settings.onclick = () => {
-        const isVisible = settings_menu.style.display === "block";
-        settings_menu.style.display = isVisible ? "none" : "block";
+        settings_menu.classList.toggle("open");
     };
 
     close_settings.onclick = () => {
-        settings_menu.style.display = "none";
+        settings_menu.classList.remove("open");
     };
 
     // Search functionality

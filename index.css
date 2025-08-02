@@ -246,3 +246,61 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Settings side menu */
+#settings_menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 260px;
+    background-color: #222;
+    box-shadow: 2px 0 6px rgba(0, 0, 0, 0.4);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    pointer-events: none;
+}
+
+#settings_menu.open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+#close_settings {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    color: white;
+    font-size: 30px;
+    cursor: pointer;
+}
+
+#settings_container ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
+
+.settings-button {
+    width: 100%;
+    padding: 8px 12px;
+    background: #333;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    font-family: Nunito, sans-serif;
+    text-align: left;
+    cursor: pointer;
+}
+
+.settings-button i {
+    margin-right: 6px;
+}
