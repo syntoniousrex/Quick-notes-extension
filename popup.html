@@ -10,7 +10,13 @@
             <i id="close_settings" class="fa-solid fa-angle-left"></i>
             <div id="settings_container">
                 <ul>
-                    <li>Light mode</li>
+                    <li class="toggle-row">
+                        <span>Light mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="light-mode-toggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </li>
                     <li>
                         <button id="clear-cache" class="settings-button">
                             <i class="fa-solid fa-trash-can"></i> Clear Cache
@@ -22,12 +28,6 @@
                         </button>
                     </li>
                 </ul>
-            </div>
-            <div id="switch_container">
-                <label class="switch">
-                    <input type="checkbox">
-                    <span class="slider round"></span>
-                </label>
             </div>
         </div>
         <header class="header">

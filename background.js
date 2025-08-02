@@ -44,8 +44,24 @@ const settings_menu = document.getElementById("settings_menu");
 const newNoteButton = document.getElementById("newNote");
 const clearCacheButton = document.getElementById("clear-cache");
 const exportButton = document.getElementById("export-notes");
+const lightModeToggle = document.getElementById("light-mode-toggle");
 const searchInput = document.getElementById("search-input");
 const container = document.getElementById("mainBox"); // used for search filtering
+
+if (lightModeToggle) {
+    chrome.storage.sync.get("lightMode", (res) => {
+        if (res.lightMode) {
+            body.classList.add("light-mode");
+            lightModeToggle.checked = true;
+        }
+    });
+
+    lightModeToggle.addEventListener("change", () => {
+        const enabled = lightModeToggle.checked;
+        body.classList.toggle("light-mode", enabled);
+        chrome.storage.sync.set({ lightMode: enabled });
+    });
+}
 
 /*************************************
 * NOTE CONSTRUCTORS
