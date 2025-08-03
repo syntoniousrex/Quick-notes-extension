@@ -340,12 +340,10 @@ body.light-mode .slider {
 }
 
 #close_settings {
-    position: absolute;
-    top: 20px;
-    right: 20px;
     color: white;
     font-size: 30px;
     cursor: pointer;
+    align-self: flex-start;
 }
 
 #settings_container ul {
