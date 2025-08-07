@@ -126,9 +126,6 @@ body.light-mode .slider {
     min-height: var(--note-min-height);
     max-height: calc(var(--note-min-height) * 3 + var(--grid-unit) * 2);
     overflow-y: auto;
-    border-width: 1px;
-    border-color: white;
-    border-style: solid;
 }
 
 .header {
