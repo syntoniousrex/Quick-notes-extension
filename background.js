@@ -31,6 +31,10 @@ const placeholders = [
     "Type. Don't think."
 ];
 
+function getRandomPlaceholder() {
+    return placeholders[Math.floor(Math.random() * placeholders.length)];
+}
+
 /**************************************
 * DOM REFERENCES
 **************************************/
@@ -76,6 +80,10 @@ function createNoteElement(noteObj) {
 
     titleInput.value = noteObj.title || "";
     bodyInput.innerHTML = noteObj.body || "";
+
+    if (!noteObj.body) {
+        bodyInput.setAttribute("data-placeholder", getRandomPlaceholder());
+    }
 
     clone.noteObj = noteObj;
     mainBox.appendChild(clone);
