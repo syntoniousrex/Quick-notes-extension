@@ -27,7 +27,7 @@ const placeholders = [
     "Meeting notes... or something like that.",
     "Therapist said write it down.",
     "Capture the moment before it fades.",
-    "Worst idea wins — go.",
+    "Worst idea wins, go.",
     "Type. Don't think."
 ];
 
