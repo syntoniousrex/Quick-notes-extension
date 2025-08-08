@@ -242,12 +242,6 @@ body.light-mode .slider {
     transition: box-shadow 0.2s ease;
 }
 
-.note.hidden {
-    display: none;
-    opacity: 0;
-    transform: scale(0.98);
-}
-
 .note-actions {
     display: flex;
     align-items: center;
@@ -507,4 +501,26 @@ input:checked + .slider:before {
 
 .settings-button i {
     margin-right: 6px;
+}
+
+#extension-links {
+    margin: 10px 0;
+    text-align: center;
+}
+
+#extension-links a {
+    color: #bbb;
+    font-size: 12px;
+    margin: 0 6px;
+    text-decoration: none;
+}
+
+body.light-mode #extension-links a {
+    color: #000;
+}
+
+@media (max-width: 400px) {
+    body {
+        width: 100%;
+    }
 }
