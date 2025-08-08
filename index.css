@@ -45,6 +45,7 @@ body {
     flex-direction: column;
     align-items: center;
     width: 360px;
+    max-width: 100%;
 }
 
 body.light-mode {
@@ -518,9 +519,5 @@ input:checked + .slider:before {
 body.light-mode #extension-links a {
     color: #000;
 }
+/* Removed media query that stretched the popup beyond its intended width */
 
-@media (max-width: 400px) {
-    body {
-        width: 100%;
-    }
-}
