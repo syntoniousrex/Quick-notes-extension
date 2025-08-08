@@ -342,7 +342,7 @@ body.light-mode .save-icon {
 }
 
 .note.saved .save-icon .ring {
-    animation: ring-progress 1s ease forwards;
+    animation: ring-progress 0.5s ease forwards;
 }
 
 .note.saved .save-icon .check {
@@ -356,11 +356,11 @@ body.light-mode .save-icon {
 }
 
 @keyframes check-fade {
-    0% {
+    0%, 50% {
         opacity: 0;
     }
-    60% {
-        opacity: 0;
+    51%, 80% {
+        opacity: 1;
     }
     100% {
         opacity: 1;
