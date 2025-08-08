@@ -217,6 +217,7 @@ body.light-mode .slider {
 
 .noteContents {
     padding: 5px;
+    padding-bottom: 25px;
     outline: none;
     background-color: transparent;
     color: white;
@@ -231,13 +232,6 @@ body.light-mode .slider {
     color: rgba(255, 255, 255, 0.5);
     pointer-events: none;
     display: block;
-}
-
-.note.saved {
-    box-shadow: 0 0 0 2px rgba(0, 255, 128, 0.8);
-    transition: box-shadow 0.25s ease;
-    -webkit-text-fill-color: white;
-    color: white;
 }
 
 .note:not(.saved):hover {
@@ -302,6 +296,39 @@ body.light-mode .slider {
     right: 5px;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
+}
+
+.save-icon {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.light-mode .save-icon {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.note.saved .save-icon {
+    animation: save-pop 0.8s ease;
+}
+
+@keyframes save-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    40% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 @keyframes fadeSlideIn {
