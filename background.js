@@ -6,12 +6,6 @@
 let array = [];
 
 // Formatting flags (not currently used, but preserved for future)
-let ITALIC = false;
-let BOLD = false;
-let UNDERLINE = false;
-let HIGHLIGHT = false;
-let start = 0;
-let end = 0;
 
 /**************************************
 * CONSTANTS
@@ -40,7 +34,6 @@ function getRandomPlaceholder() {
 **************************************/
 
 const body = document.body;
-const header = document.querySelector("header");
 const mainBox = document.getElementById("mainBox");
 const settings = document.getElementById("settings");
 const close_settings = document.getElementById("close_settings");
@@ -50,11 +43,10 @@ const clearCacheButton = document.getElementById("clear-cache");
 const exportButton = document.getElementById("export-notes");
 const lightModeToggle = document.getElementById("light-mode-toggle");
 const searchInput = document.getElementById("search-input");
-const container = document.getElementById("mainBox"); // used for search filtering
 
 if (lightModeToggle) {
-    chrome.storage.sync.get("lightMode", (res) => {
-        if (res.lightMode) {
+    getStorage("lightMode", (value) => {
+        if (value) {
             body.classList.add("light-mode");
             lightModeToggle.checked = true;
         }
@@ -63,7 +55,7 @@ if (lightModeToggle) {
     lightModeToggle.addEventListener("change", () => {
         const enabled = lightModeToggle.checked;
         body.classList.toggle("light-mode", enabled);
-        chrome.storage.sync.set({ lightMode: enabled });
+        setStorage("lightMode", enabled);
     });
 }
 
@@ -99,14 +91,7 @@ function bindNoteEvents(clone, noteObj) {
     const saveNote = debounce(() => {
         noteObj.title = titleInput.value;
         noteObj.body = bodyInput.innerHTML;
-
-        console.log("[saveNote] Updated note object:", noteObj);
-        console.log("[saveNote] Full array:", array);
-
-        chrome.storage.sync.set({ "Table": JSON.stringify(array) }, () => {
-            console.log("[saveNote] Storage updated");
-        });
-
+        setStorage("Table", JSON.stringify(array));
         clone.classList.add("saved");
         setTimeout(() => clone.classList.remove("saved"), 1000);
     }, 500);
@@ -165,45 +150,51 @@ function newNote(noteContents = "") {
     bindNoteEvents(clone, noteObj);
 }
 
-function setStorage(key, value) {
-    chrome.storage.sync.set({[key] : value}, function() {
-        console.log("[setStorage] Key:", key, "Value:", value);
-        chrome.storage.sync.get(key, function(result) {
-            console.log("[setStorage] Confirmed saved:", result[key]);
-        });
+// Save a key/value pair to chrome.storage with basic error handling
+function setStorage(key, value, callback) {
+    chrome.storage.sync.set({ [key]: value }, () => {
+        if (chrome.runtime.lastError) {
+            console.error("Storage set failed:", chrome.runtime.lastError);
+        } else if (callback) {
+            callback();
+        }
+    });
+}
+
+// Retrieve a value from chrome.storage
+function getStorage(key, callback) {
+    chrome.storage.sync.get(key, (result) => {
+        if (chrome.runtime.lastError) {
+            console.error("Storage get failed:", chrome.runtime.lastError);
+            callback(null);
+            return;
+        }
+        callback(result[key]);
     });
 }
 
 function loadNotesFromStorage() {
-    console.log("[loadNotesFromStorage] Loading notes…");
-
-    chrome.storage.sync.get("Table", function (result) {
+    getStorage("Table", (stored) => {
         let data = [];
-
-        if (result["Table"]) {
+        if (stored) {
             try {
-                data = JSON.parse(result["Table"]);
+                data = JSON.parse(stored);
             } catch (e) {
                 console.error("Error parsing Table:", e);
             }
         }
 
-        console.log("[loadNotesFromStorage] Loaded data:", data);
         array = data;
-
         if (array.length === 0) {
-            console.log("[loadNotesFromStorage] No notes found. Creating one.");
             newNote();
             return;
         }
 
-        array.forEach(noteData => {
+        array.forEach((noteData) => {
             if (typeof noteData === "object" && noteData !== null) {
                 newNote(noteData);
             }
         });
-
-        console.log("[loadNotesFromStorage] All notes rendered");
     });
 }
 
@@ -218,8 +209,7 @@ function enableDragSorting() {
             }
             array.splice(targetIndex, 0, movingNote);
 
-            console.log("[drag] New array order:", array);
-            chrome.storage.sync.set({ Table: JSON.stringify(array) });
+            setStorage("Table", JSON.stringify(array));
 
             setTimeout(() => event.item.classList.add("saved"), 200);
             setTimeout(() => event.item.classList.remove("saved"), 1200);
@@ -230,18 +220,20 @@ function enableDragSorting() {
 function clearAllNotes() {
     array = [];
     chrome.storage.sync.remove("Table", () => {
-        console.log("[clearAllNotes] Storage cleared");
+        if (chrome.runtime.lastError) {
+            console.error("Storage remove failed:", chrome.runtime.lastError);
+        }
     });
     mainBox.innerHTML = "";
     newNote();
 }
 
 function exportNotes() {
-    chrome.storage.sync.get("Table", (result) => {
+    getStorage("Table", (stored) => {
         let data = [];
-        if (result["Table"]) {
+        if (stored) {
             try {
-                data = JSON.parse(result["Table"]);
+                data = JSON.parse(stored);
             } catch (e) {
                 console.error("Error parsing Table:", e);
             }
@@ -256,8 +248,6 @@ function exportNotes() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-
-        console.log("[exportNotes] Notes exported");
     });
 }
 
@@ -265,7 +255,6 @@ clearCacheButton.onclick = clearAllNotes;
 exportButton.onclick = exportNotes;
 
 window.onload = () => {
-    console.log("[onload] Extension loaded");
     loadNotesFromStorage();
     enableDragSorting();
     setupUI();
@@ -303,7 +292,6 @@ function setupUI() {
 
     // New note creation
     newNoteButton.onclick = () => {
-        console.log("[newNoteButton] Clicked");
         newNote();
     };
 }
