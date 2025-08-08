@@ -356,10 +356,13 @@ body.light-mode .save-icon {
 }
 
 @keyframes check-fade {
-    0%, 50% {
+    0% {
         opacity: 0;
     }
-    51%, 80% {
+    50% {
+        opacity: 1;
+    }
+    80% {
         opacity: 1;
     }
     100% {
