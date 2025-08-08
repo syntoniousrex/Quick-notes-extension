@@ -108,7 +108,7 @@ function bindNoteEvents(clone, noteObj) {
         });
 
         clone.classList.add("saved");
-        setTimeout(() => clone.classList.remove("saved"), 800);
+        setTimeout(() => clone.classList.remove("saved"), 1000);
     }, 500);
 
     titleInput.addEventListener("input", saveNote);
@@ -222,7 +222,7 @@ function enableDragSorting() {
             chrome.storage.sync.set({ Table: JSON.stringify(array) });
 
             setTimeout(() => event.item.classList.add("saved"), 200);
-            setTimeout(() => event.item.classList.remove("saved"), 1000);
+            setTimeout(() => event.item.classList.remove("saved"), 1200);
         }
     });
 }
