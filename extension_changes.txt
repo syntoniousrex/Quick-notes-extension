@@ -1,0 +1,35 @@
+
+Suggested Changes Before Publishing Chrome Extension:
+
+1. manifest.json
+   - Add a clear and descriptive `description` field for the Chrome Web Store.
+   - Ensure `version` is bumped to 1.0.0 for public release.
+   - Add `icons` property for different sizes (16, 48, 128 px) to display in store and browser.
+
+2. popup.html
+   - Ensure it has a professional and clean UI.
+   - Add any relevant links such as "Support", "Rate this extension", or "Visit Website".
+
+3. background.js
+   - Confirm there are no unused variables or console.log calls left.
+   - Ensure storage interactions are optimized and errors are handled gracefully.
+   - Add comments to make the code more maintainable.
+
+4. index.css
+   - Make sure all unused classes are removed.
+   - Confirm mobile-friendly and high-DPI compatibility.
+   - Double-check that the background grid alignment looks correct in all viewports.
+
+5. Project Root
+   - Add a README.md with:
+       • Extension purpose
+       • Installation steps
+       • Permissions explanation
+       • Contact/support information
+   - Ensure AGENTS.md is relevant and clear for anyone contributing.
+
+6. General
+   - Test thoroughly in Chrome's latest stable version.
+   - Check for performance issues with many notes added.
+   - Consider adding optional analytics (with user consent) to track feature usage.
+   - Add a privacy policy link if the extension stores any user data.
