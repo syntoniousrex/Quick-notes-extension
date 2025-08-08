@@ -217,6 +217,7 @@ body.light-mode .slider {
 
 .noteContents {
     padding: 5px;
+    padding-bottom: 25px;
     outline: none;
     background-color: transparent;
     color: white;
@@ -231,13 +232,6 @@ body.light-mode .slider {
     color: rgba(255, 255, 255, 0.5);
     pointer-events: none;
     display: block;
-}
-
-.note.saved {
-    box-shadow: 0 0 0 2px rgba(0, 255, 128, 0.8);
-    transition: box-shadow 0.25s ease;
-    -webkit-text-fill-color: white;
-    color: white;
 }
 
 .note:not(.saved):hover {
@@ -302,6 +296,97 @@ body.light-mode .slider {
     right: 5px;
     font-size: 12px;
     color: rgba(255, 255, 255, 0.6);
+}
+
+.save-icon {
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.save-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.save-icon .ring,
+.save-icon .check {
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+}
+
+.save-icon .ring {
+    stroke-dasharray: 44;
+    stroke-dashoffset: 44;
+    stroke-linecap: round;
+}
+
+.save-icon .check {
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+}
+
+body.light-mode .save-icon {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+.note.saved .save-icon {
+    animation: save-fade 1s ease forwards;
+}
+
+.note.saved .save-icon .ring {
+    animation: ring-progress 0.5s ease forwards;
+}
+
+.note.saved .save-icon .check {
+    animation: check-fade 1s ease forwards;
+}
+
+@keyframes ring-progress {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes check-fade {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes save-fade {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    80% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(1);
+    }
 }
 
 @keyframes fadeSlideIn {
