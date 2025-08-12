@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Quick notes",
-  "description": "A simple application to replace physical sticky notes",
-  "version": "0.1.0",
+  "description": "Quick Notes lets you jot and organize sticky notes directly in your browser.",
+  "version": "1.0.0",
   "icons": {
     "16": "images/icon-16.png",
     "32": "images/icon-32.png",
