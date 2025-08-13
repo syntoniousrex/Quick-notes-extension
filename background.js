@@ -116,6 +116,10 @@ function bindNoteEvents(clone, noteObj) {
             const type = btn.dataset.type;
             if (!type) return;
 
+            // Preserve the current selection so formatting applies to it
+            const selection = window.getSelection();
+            const range = selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
+
             // Some actions (like highlighting and links) require a value
             let value = btn.dataset.value || null;
             if (type === "createLink") {
@@ -124,19 +128,19 @@ function bindNoteEvents(clone, noteObj) {
                 value = url;
             }
 
-            // Preserve the current selection so formatting applies to it
-            const selection = window.getSelection();
-            const range = selection.rangeCount ? selection.getRangeAt(0) : null;
+            setTimeout(() => {
+                // Restore focus and selection before executing the command
+                bodyInput.focus();
+                if (range) {
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
 
-            // Restore focus and selection before executing the command
-            bodyInput.focus();
-            if (range) {
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-
-            document.execCommand(type, false, value);
-            bodyInput.focus();
+                console.log(`Executing ${type}`, { value, activeElement: document.activeElement });
+                document.execCommand(type, false, value);
+                bodyInput.focus();
+                console.log(`After ${type}`, { activeElement: document.activeElement });
+            }, 0);
         });
     });
 
