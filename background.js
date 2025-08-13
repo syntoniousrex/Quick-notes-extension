@@ -124,6 +124,17 @@ function bindNoteEvents(clone, noteObj) {
                 value = url;
             }
 
+            // Preserve the current selection so formatting applies to it
+            const selection = window.getSelection();
+            const range = selection.rangeCount ? selection.getRangeAt(0) : null;
+
+            // Restore focus and selection before executing the command
+            bodyInput.focus();
+            if (range) {
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+
             document.execCommand(type, false, value);
             bodyInput.focus();
         });
