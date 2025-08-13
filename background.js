@@ -71,11 +71,8 @@ function createNoteElement(noteObj) {
     const bodyInput = clone.querySelector(".noteContents");
 
     titleInput.value = noteObj.title || "";
-    bodyInput.innerHTML = noteObj.body || "";
-
-    if (!noteObj.body) {
-        bodyInput.setAttribute("data-placeholder", getRandomPlaceholder());
-    }
+    bodyInput.value = noteObj.body || "";
+    bodyInput.setAttribute("data-placeholder", getRandomPlaceholder());
 
     clone.noteObj = noteObj;
     mainBox.appendChild(clone);
@@ -87,17 +84,45 @@ function bindNoteEvents(clone, noteObj) {
     const titleInput = clone.querySelector(".note-title");
     const bodyInput = clone.querySelector(".noteContents");
     const wordCount = clone.querySelector(".word-count");
+    const editorId = `note-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    bodyInput.id = editorId;
 
+    let editor;
     const saveNote = debounce(() => {
         noteObj.title = titleInput.value;
-        noteObj.body = bodyInput.innerHTML;
+        noteObj.body = editor ? editor.getContent() : "";
         setStorage("Table", JSON.stringify(array));
         clone.classList.add("saved");
         setTimeout(() => clone.classList.remove("saved"), 1000);
     }, 500);
 
     titleInput.addEventListener("input", saveNote);
-    bodyInput.addEventListener("input", saveNote);
+
+    tinymce.init({
+        selector: `#${editorId}`,
+        menubar: false,
+        plugins: "link",
+        toolbar: "bold italic underline forecolor link",
+        setup: (ed) => {
+            editor = ed;
+            ed.on("init", () => {
+                if (noteObj.body) {
+                    ed.setContent(noteObj.body);
+                } else {
+                    ed.getBody().setAttribute("data-placeholder", bodyInput.getAttribute("data-placeholder"));
+                }
+                const text = ed.getContent({ format: "text" }).trim();
+                const words = text === "" ? 0 : text.split(/\s+/).length;
+                wordCount.innerText = words;
+            });
+            ed.on("keyup change", () => {
+                saveNote();
+                const text = ed.getContent({ format: "text" }).trim();
+                const words = text === "" ? 0 : text.split(/\s+/).length;
+                wordCount.innerText = words;
+            });
+        }
+    });
 
     clone.querySelector(".fa-trash-can").onclick = function () {
         clone.classList.add("fade-out");
@@ -105,57 +130,11 @@ function bindNoteEvents(clone, noteObj) {
             const index = array.indexOf(noteObj);
             if (index !== -1) array.splice(index, 1);
             setStorage("Table", JSON.stringify(array));
+            const ed = tinymce.get(editorId);
+            if (ed) ed.remove();
             clone.remove();
         }, 200);
     };
-
-    const styleButtons = clone.querySelectorAll(".style-actions .action");
-    styleButtons.forEach((btn) => {
-        btn.addEventListener("mousedown", (e) => {
-            e.preventDefault();
-            const type = btn.dataset.type;
-            if (!type) return;
-
-            // Preserve the current selection so formatting applies to it
-            const selection = window.getSelection();
-            const range = selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
-
-            // Some actions (like highlighting and links) require a value
-            let value = btn.dataset.value || null;
-            if (type === "createLink") {
-                const url = prompt("Enter link URL", "https://");
-                if (!url) return; // User cancelled
-                value = url;
-            }
-
-            setTimeout(() => {
-                // Restore focus and selection before executing the command
-                bodyInput.focus();
-                if (range) {
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                }
-
-                console.log(`Executing ${type}`, { value, activeElement: document.activeElement });
-                document.execCommand(type, false, value);
-                bodyInput.focus();
-                console.log(`After ${type}`, { activeElement: document.activeElement });
-            }, 0);
-        });
-    });
-
-    bodyInput.addEventListener("keydown", () => {
-        const text = bodyInput.innerText.trim();
-        const words = text === "" ? 0 : text.split(/\s+/).length;
-        wordCount.innerText = words;
-    });
-
-    bodyInput.addEventListener("keyup", () => {
-        styleButtons.forEach((btn) => {
-            const type = btn.dataset.type;
-            btn.classList.toggle("active", document.queryCommandState(type));
-        });
-    });
 }
 
 // CONSTRUCT NEW NOTE //

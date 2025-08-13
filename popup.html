@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
         <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Nunito'>
         <script src="lib/Sortable.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
     </head>
     <body>
         <div id="settings_menu">
@@ -53,19 +54,12 @@
         <template id="note-template">
             <div class="note shadow">
                 <div class="note-actions">
-                    <div class="style-actions">
-                        <i class="action fa-solid fa-bold" data-type="bold"></i>
-                        <i class="action fa-solid fa-italic" data-type="italic"></i>
-                        <i class="action fa-solid fa-underline" data-type="underline"></i>
-                        <i class="action fa-solid fa-highlighter" data-type="hiliteColor" data-value="yellow"></i>
-                        <i class="action fa-solid fa-link" style="float: left;" data-type="createLink"></i>
-                    </div>
                     <input type="text" class="note-title" placeholder="Title...">
                     <div class="trash-action">
                         <i class="action fa-solid fa-trash-can" style="float: right;"></i>
                     </div>
                 </div>
-                <div contenteditable="true" class="noteContents" data-placeholder="Start typing..."></div>
+                <textarea class="noteContents" data-placeholder="Start typing..."></textarea>
                 <div class="save-icon">
                     <svg viewBox="0 0 16 16" class="checkmark-icon">
                         <circle class="ring" cx="8" cy="8" r="7" />
