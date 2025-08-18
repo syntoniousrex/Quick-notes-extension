@@ -87,6 +87,7 @@ function bindNoteEvents(clone, noteObj) {
     const titleInput = clone.querySelector(".note-title");
     const bodyInput = clone.querySelector(".noteContents");
     const wordCount = clone.querySelector(".word-count");
+    let selectionRange = null;
 
     const saveNote = debounce(() => {
         noteObj.title = titleInput.value;
@@ -110,6 +111,13 @@ function bindNoteEvents(clone, noteObj) {
     };
 
     const styleButtons = clone.querySelectorAll(".style-actions .action");
+    function saveSelection() {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            selectionRange = sel.getRangeAt(0);
+        }
+    }
+
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
@@ -123,8 +131,14 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             bodyInput.focus();
+            if (selectionRange) {
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(selectionRange);
+            }
+
             document.execCommand(type, false, value);
-            
+            saveSelection();
         });
     });
 
@@ -134,7 +148,9 @@ function bindNoteEvents(clone, noteObj) {
         wordCount.innerText = words;
     });
 
+    bodyInput.addEventListener("mouseup", saveSelection);
     bodyInput.addEventListener("keyup", () => {
+        saveSelection();
         styleButtons.forEach((btn) => {
             const type = btn.dataset.type;
             btn.classList.toggle("active", document.queryCommandState(type));
