@@ -122,7 +122,7 @@ function bindNoteEvents(clone, noteObj) {
         const current = document.queryCommandValue("hiliteColor");
         return current === "rgb(255, 255, 0)" || current === "yellow";
     }
-
+  
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
