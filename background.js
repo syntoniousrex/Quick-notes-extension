@@ -114,10 +114,16 @@ function bindNoteEvents(clone, noteObj) {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
             const type = btn.dataset.type;
-            if (type) {
-                document.execCommand(type, false, null);
-                bodyInput.focus();
+            if (!type) return;
+
+            let value = btn.dataset.value || null;
+            if (type === "createLink" && !value) {
+                value = prompt("Enter a URL");
+                if (!value) return;
             }
+
+            document.execCommand(type, false, value);
+            bodyInput.focus();
         });
     });
 
