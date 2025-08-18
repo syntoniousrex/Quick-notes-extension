@@ -110,14 +110,44 @@ function bindNoteEvents(clone, noteObj) {
     };
 
     const styleButtons = clone.querySelectorAll(".style-actions .action");
+
+    function isHighlighted() {
+        const current = document.queryCommandValue("hiliteColor");
+        return current === "rgb(255, 255, 0)" || current === "yellow";
+    }
+
+    function updateToolbar() {
+        styleButtons.forEach((btn) => {
+            const type = btn.dataset.type;
+            if (type === "hiliteColor") {
+                btn.classList.toggle("active", isHighlighted());
+            } else {
+                btn.classList.toggle("active", document.queryCommandState(type));
+            }
+        });
+    }
+
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
             const type = btn.dataset.type;
-            if (type) {
-                document.execCommand(type, false, null);
-                bodyInput.focus();
+            if (!type) return;
+
+            let value = btn.dataset.value || null;
+            if (type === "createLink" && !value) {
+                value = prompt("Enter a URL");
+                if (!value) return;
             }
+
+            if (type === "hiliteColor") {
+                const newColor = isHighlighted() ? "transparent" : value;
+                document.execCommand(type, false, newColor);
+            } else {
+                document.execCommand(type, false, value);
+            }
+
+            bodyInput.focus();
+            updateToolbar();
         });
     });
 
@@ -127,12 +157,8 @@ function bindNoteEvents(clone, noteObj) {
         wordCount.innerText = words;
     });
 
-    bodyInput.addEventListener("keyup", () => {
-        styleButtons.forEach((btn) => {
-            const type = btn.dataset.type;
-            btn.classList.toggle("active", document.queryCommandState(type));
-        });
-    });
+    bodyInput.addEventListener("mouseup", updateToolbar);
+    bodyInput.addEventListener("keyup", updateToolbar);
 }
 
 // CONSTRUCT NEW NOTE //
