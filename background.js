@@ -110,6 +110,22 @@ function bindNoteEvents(clone, noteObj) {
     };
 
     const styleButtons = clone.querySelectorAll(".style-actions .action");
+    let savedRange = null;
+
+    function saveSelection() {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            savedRange = sel.getRangeAt(0);
+        }
+    }
+
+    function restoreSelection() {
+        if (savedRange) {
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(savedRange);
+        }
+    }
 
     function isHighlighted() {
         const current = document.queryCommandValue("hiliteColor");
@@ -130,10 +146,17 @@ function bindNoteEvents(clone, noteObj) {
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
+            bodyInput.focus();
+            restoreSelection();
+
             const type = btn.dataset.type;
             if (!type) return;
 
             let value = btn.dataset.value || null;
+            if (type === "createLink" && !value) {
+                value = prompt("Enter URL");
+                if (!value) return;
+            }
 
             if (type === "hiliteColor") {
                 const newColor = isHighlighted() ? "transparent" : value;
@@ -142,7 +165,7 @@ function bindNoteEvents(clone, noteObj) {
                 document.execCommand(type, false, value);
             }
 
-            bodyInput.focus();
+            saveSelection();
             updateToolbar();
         });
     });
@@ -153,8 +176,8 @@ function bindNoteEvents(clone, noteObj) {
         wordCount.innerText = words;
     });
 
-    bodyInput.addEventListener("mouseup", updateToolbar);
-    bodyInput.addEventListener("keyup", updateToolbar);
+    bodyInput.addEventListener("mouseup", () => { saveSelection(); updateToolbar(); });
+    bodyInput.addEventListener("keyup", () => { saveSelection(); updateToolbar(); });
 }
 
 // CONSTRUCT NEW NOTE //
