@@ -122,8 +122,9 @@ function bindNoteEvents(clone, noteObj) {
                 if (!value) return;
             }
 
-            document.execCommand(type, false, value);
             bodyInput.focus();
+            document.execCommand(type, false, value);
+            
         });
     });
 
