@@ -118,6 +118,11 @@ function bindNoteEvents(clone, noteObj) {
         }
     }
 
+    function isHighlighted() {
+        const current = document.queryCommandValue("hiliteColor");
+        return current === "rgb(255, 255, 0)" || current === "yellow";
+    }
+  
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
@@ -137,7 +142,12 @@ function bindNoteEvents(clone, noteObj) {
                 sel.addRange(selectionRange);
             }
 
-            document.execCommand(type, false, value);
+            if (type === "hiliteColor") {
+                const toggleValue = isHighlighted() ? "transparent" : value;
+                document.execCommand(type, false, toggleValue);
+            } else {
+                document.execCommand(type, false, value);
+            }
             saveSelection();
         });
     });
@@ -153,7 +163,11 @@ function bindNoteEvents(clone, noteObj) {
         saveSelection();
         styleButtons.forEach((btn) => {
             const type = btn.dataset.type;
-            btn.classList.toggle("active", document.queryCommandState(type));
+            if (type === "hiliteColor") {
+                btn.classList.toggle("active", isHighlighted());
+            } else {
+                btn.classList.toggle("active", document.queryCommandState(type));
+            }
         });
     });
 }
