@@ -165,7 +165,7 @@ function bindNoteEvents(clone, noteObj) {
                 document.execCommand(type, false, value);
             }
 
-            saveSelection();
+            restoreSelection();
             updateToolbar();
         });
     });
