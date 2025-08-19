@@ -180,15 +180,15 @@ function bindNoteEvents(clone, noteObj) {
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
                         if (node.nodeType === 1 && getComputedStyle(node).backgroundColor === "rgb(255, 255, 0)") {
-                            const restore = sel.getRangeAt(0).cloneRange();
                             const clear = document.createRange();
                             clear.setStart(sel.anchorNode, sel.anchorOffset);
                             clear.setEndAfter(node);
                             sel.removeAllRanges();
                             sel.addRange(clear);
                             document.execCommand(type, false, "transparent");
+                            clear.collapse(false);
                             sel.removeAllRanges();
-                            sel.addRange(restore);
+                            sel.addRange(clear);
                             break;
                         }
                         node = node.parentNode;
