@@ -158,7 +158,7 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             if (type === "hiliteColor") {
-                if (sel.isCollapsed && isHighlighted()) 
+                if (sel.isCollapsed && isHighlighted()) {
                     // Split existing highlight at the caret so future text isn't highlighted
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
