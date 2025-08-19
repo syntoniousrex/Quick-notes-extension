@@ -113,8 +113,8 @@ function bindNoteEvents(clone, noteObj) {
     const styleButtons = clone.querySelectorAll(".style-actions .action");
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-            selectionRange = sel.getRangeAt(0);
+        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+            selectionRange = sel.getRangeAt(0).cloneRange();
         }
     }
 
@@ -136,6 +136,7 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             bodyInput.focus();
+
             if (selectionRange) {
                 const sel = window.getSelection();
                 sel.removeAllRanges();
@@ -143,11 +144,34 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             if (type === "hiliteColor") {
+                // If caret only, try to expand to surrounding yellow highlight
+                if (sel.isCollapsed) {
+                    let node = sel.anchorNode;
+                    while (node && node !== bodyInput) {
+                        if (node.nodeType === 1) {
+                            const bg = getComputedStyle(node).backgroundColor;
+                            if (bg === "rgb(255, 255, 0)") {
+                                const r = document.createRange();
+                                r.selectNodeContents(node);
+                                sel.removeAllRanges();
+                                sel.addRange(r);
+                                break;
+                            }
+                        }
+                        node = node.parentNode;
+                    }
+                }
                 const toggleValue = isHighlighted() ? "transparent" : value;
                 document.execCommand(type, false, toggleValue);
             } else {
                 document.execCommand(type, false, value);
             }
+
+            const sel2 = window.getSelection();
+            if (sel2.rangeCount && !sel2.isCollapsed) {
+                selectionRange = sel2.getRangeAt(0).cloneRange();
+            }
+            
             saveSelection();
         });
     });
