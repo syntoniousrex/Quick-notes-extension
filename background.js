@@ -144,25 +144,31 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             if (type === "hiliteColor") {
-                // If caret is inside an existing highlight, expand to that span
-                if (sel.isCollapsed) {
+                if (sel.isCollapsed && isHighlighted()) {
+                    // Remove highlight from caret forward but keep earlier text highlighted
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
-                        if (node.nodeType === 1) {
-                            const bg = getComputedStyle(node).backgroundColor;
-                            if (bg === "rgb(255, 255, 0)") {
-                                const r = document.createRange();
-                                r.selectNodeContents(node);
-                                sel.removeAllRanges();
-                                sel.addRange(r);
-                                break;
-                            }
+                        if (node.nodeType === 1 && getComputedStyle(node).backgroundColor === "rgb(255, 255, 0)") {
+                            const r = document.createRange();
+                            r.setStart(sel.anchorNode, sel.anchorOffset);
+                            r.setEndAfter(node);
+                            sel.removeAllRanges();
+                            sel.addRange(r);
+                            document.execCommand(type, false, "transparent");
+                            // Restore caret at original position
+                            const collapse = document.createRange();
+                            collapse.setStart(r.startContainer, r.startOffset);
+                            collapse.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(collapse);
+                            break;
                         }
                         node = node.parentNode;
                     }
+                } else {
+                    const toggleValue = isHighlighted() ? "transparent" : value;
+                    document.execCommand(type, false, toggleValue);
                 }
-                const toggleValue = isHighlighted() ? "transparent" : value;
-                document.execCommand(type, false, toggleValue);
             } else {
                 document.execCommand(type, false, value);
             }
