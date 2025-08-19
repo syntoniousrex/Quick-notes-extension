@@ -113,7 +113,7 @@ function bindNoteEvents(clone, noteObj) {
     const styleButtons = clone.querySelectorAll(".style-actions .action");
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+        if (sel.rangeCount > 0) {
             selectionRange = sel.getRangeAt(0).cloneRange();
         }
     }
@@ -135,43 +135,49 @@ function bindNoteEvents(clone, noteObj) {
                 if (!value) return;
             }
 
+            const sel = window.getSelection();
             bodyInput.focus();
 
             if (selectionRange) {
-                const sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(selectionRange);
             }
 
             if (type === "hiliteColor") {
-                // If caret only, try to expand to surrounding yellow highlight
-                if (sel.isCollapsed) {
+                if (sel.isCollapsed && isHighlighted()) {
+                    // Remove highlight from caret forward but keep earlier text highlighted
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
-                        if (node.nodeType === 1) {
-                            const bg = getComputedStyle(node).backgroundColor;
-                            if (bg === "rgb(255, 255, 0)") {
-                                const r = document.createRange();
-                                r.selectNodeContents(node);
-                                sel.removeAllRanges();
-                                sel.addRange(r);
-                                break;
-                            }
+                        if (node.nodeType === 1 && getComputedStyle(node).backgroundColor === "rgb(255, 255, 0)") {
+                            const r = document.createRange();
+                            r.setStart(sel.anchorNode, sel.anchorOffset);
+                            r.setEndAfter(node);
+                            sel.removeAllRanges();
+                            sel.addRange(r);
+                            document.execCommand(type, false, "transparent");
+                            // Place caret after the cleared highlight
+                            const collapse = document.createRange();
+                            collapse.setStart(r.endContainer, r.endOffset);
+                            collapse.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(collapse);
+                            break;
                         }
                         node = node.parentNode;
                     }
+                } else {
+                    const toggleValue = isHighlighted() ? "transparent" : value;
+                    document.execCommand(type, false, toggleValue);
                 }
-                const toggleValue = isHighlighted() ? "transparent" : value;
-                document.execCommand(type, false, toggleValue);
             } else {
                 document.execCommand(type, false, value);
             }
 
             const sel2 = window.getSelection();
-            if (sel2.rangeCount && !sel2.isCollapsed) {
+            if (sel2.rangeCount > 0) {
                 selectionRange = sel2.getRangeAt(0).cloneRange();
             }
-            
+
             saveSelection();
         });
     });
