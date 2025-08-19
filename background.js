@@ -87,6 +87,7 @@ function bindNoteEvents(clone, noteObj) {
     const titleInput = clone.querySelector(".note-title");
     const bodyInput = clone.querySelector(".noteContents");
     const wordCount = clone.querySelector(".word-count");
+    let hiliteTypingOn = false;
     let selectionRange = null;
 
     const saveNote = debounce(() => {
@@ -113,7 +114,7 @@ function bindNoteEvents(clone, noteObj) {
     const styleButtons = clone.querySelectorAll(".style-actions .action");
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
+        if (sel.rangeCount > 0 && !sel.isCollapsed) {
             selectionRange = sel.getRangeAt(0).cloneRange();
         }
     }
@@ -169,45 +170,77 @@ function bindNoteEvents(clone, noteObj) {
             const sel = window.getSelection();
             bodyInput.focus();
 
-            if (selectionRange) {
+            const selInside = sel.rangeCount && bodyInput.contains(sel.anchorNode);
+            if (selectionRange && !selInside) {
                 sel.removeAllRanges();
                 sel.addRange(selectionRange);
             }
 
             if (type === "hiliteColor") {
-                if (sel.isCollapsed && isHighlighted()) {
-                    // Split existing highlight at the caret so future text isn't highlighted
+                const valueOn = btn.dataset.value || "yellow";
+
+                if (!sel.rangeCount) return;
+
+                if (!sel.isCollapsed) {
+                    // Selection - toggle based on whether any of the selection is highlighted
+                    const range = sel.getRangeAt(0);
+                    const toggleValue = selectionHasHighlight(range) ? "transparent" : valueOn;
+                    document.execCommand("hiliteColor", false, toggleValue);
+                    hiliteTypingOn = toggleValue !== "transparent";
+                } else {
+                    // Caret-only - decide from caret context, not a global flag
+                    const caretIsHighlighted = isHighlighted();
+
+                    if (!caretIsHighlighted) {
+                    // Turn ON typing highlight at caret
+                    document.execCommand("hiliteColor", false, valueOn);
+                    hiliteTypingOn = true;
+                    } else {
+                    // Turn OFF and move caret just after the highlighted island
+                    document.execCommand("hiliteColor", false, "transparent");
+                    hiliteTypingOn = false;
+
+                    // Find nearest highlighted ancestor
                     let node = sel.anchorNode;
+                    let highlightEl = null;
                     while (node && node !== bodyInput) {
-                        if (node.nodeType === 1 && getComputedStyle(node).backgroundColor === "rgb(255, 255, 0)") {
-                            const clear = document.createRange();
-                            clear.setStart(sel.anchorNode, sel.anchorOffset);
-                            clear.setEndAfter(node);
-                            sel.removeAllRanges();
-                            sel.addRange(clear);
-                            document.execCommand(type, false, "transparent");
-                            clear.collapse(false);
-                            sel.removeAllRanges();
-                            sel.addRange(clear);
+                        if (node.nodeType === 1) {
+                        const bg = getComputedStyle(node).backgroundColor;
+                        if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
+                            highlightEl = node;
                             break;
+                        }
                         }
                         node = node.parentNode;
                     }
-                } else {
-                    const range = sel.getRangeAt(0);
-                    const toggleValue = selectionHasHighlight(range) ? "transparent" : value;
-                    document.execCommand(type, false, toggleValue);
+
+                    if (highlightEl && highlightEl.parentNode) {
+                        // Insert zero-width marker AFTER the highlight and place caret there
+                        const marker = document.createTextNode("\u200B");
+                        highlightEl.parentNode.insertBefore(marker, highlightEl.nextSibling);
+
+                        const r = document.createRange();
+                        r.setStart(marker, 0);
+                        r.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
+
+                        const cleanup = () => {
+                        if (marker.parentNode) marker.remove();
+                        bodyInput.removeEventListener("input", cleanup);
+                        };
+                        bodyInput.addEventListener("input", cleanup);
+                    }
+                    }
                 }
             } else {
                 document.execCommand(type, false, value);
             }
 
             const sel2 = window.getSelection();
-            if (sel2.rangeCount > 0) {
+            if (sel2.rangeCount > 0 && !sel2.isCollapsed) {
                 selectionRange = sel2.getRangeAt(0).cloneRange();
             }
-
-            saveSelection();
         });
     });
 
