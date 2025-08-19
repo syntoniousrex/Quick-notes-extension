@@ -122,6 +122,20 @@ function bindNoteEvents(clone, noteObj) {
         const current = document.queryCommandValue("hiliteColor");
         return current === "rgb(255, 255, 0)" || current === "yellow";
     }
+
+    function selectionHasHighlight(range) {
+        const fragment = range.cloneContents();
+        const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
+        let node = walker.nextNode();
+        while (node) {
+            const bg = node.style.backgroundColor;
+            if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
+                return true;
+            }
+            node = walker.nextNode();
+        }
+        return false;
+    }
   
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
@@ -144,29 +158,28 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             if (type === "hiliteColor") {
-                if (sel.isCollapsed && isHighlighted()) {
-                    // Remove highlight from caret forward but keep earlier text highlighted
+                if (sel.isCollapsed && isHighlighted()) 
+                    // Split existing highlight at the caret so future text isn't highlighted
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
                         if (node.nodeType === 1 && getComputedStyle(node).backgroundColor === "rgb(255, 255, 0)") {
-                            const r = document.createRange();
-                            r.setStart(sel.anchorNode, sel.anchorOffset);
-                            r.setEndAfter(node);
+                            const restore = sel.getRangeAt(0).cloneRange();
+                            const clear = document.createRange();
+                            clear.setStart(sel.anchorNode, sel.anchorOffset);
+                            clear.setEndAfter(node);
                             sel.removeAllRanges();
-                            sel.addRange(r);
+                            sel.addRange(clear);
                             document.execCommand(type, false, "transparent");
-                            // Place caret after the cleared highlight
-                            const collapse = document.createRange();
-                            collapse.setStart(r.endContainer, r.endOffset);
-                            collapse.collapse(true);
                             sel.removeAllRanges();
-                            sel.addRange(collapse);
+                            sel.addRange(restore);
+
                             break;
                         }
                         node = node.parentNode;
                     }
                 } else {
-                    const toggleValue = isHighlighted() ? "transparent" : value;
+                    const range = sel.getRangeAt(0);
+                    const toggleValue = selectionHasHighlight(range) ? "transparent" : value;
                     document.execCommand(type, false, toggleValue);
                 }
             } else {
