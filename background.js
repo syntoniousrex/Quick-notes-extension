@@ -155,9 +155,9 @@ function bindNoteEvents(clone, noteObj) {
                             sel.removeAllRanges();
                             sel.addRange(r);
                             document.execCommand(type, false, "transparent");
-                            // Restore caret at original position
+                            // Place caret after the cleared highlight
                             const collapse = document.createRange();
-                            collapse.setStart(r.startContainer, r.startOffset);
+                            collapse.setStart(r.endContainer, r.endOffset);
                             collapse.collapse(true);
                             sel.removeAllRanges();
                             sel.addRange(collapse);
