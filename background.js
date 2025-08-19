@@ -124,6 +124,23 @@ function bindNoteEvents(clone, noteObj) {
     }
 
     function selectionHasHighlight(range) {
+        function hasHighlight(node) {
+            while (node && node !== bodyInput) {
+                if (node.nodeType === 1) {
+                    const bg = getComputedStyle(node).backgroundColor;
+                    if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
+                        return true;
+                    }
+                }
+                node = node.parentNode;
+            }
+            return false;
+        }
+
+        if (hasHighlight(range.startContainer) || hasHighlight(range.endContainer)) {
+            return true;
+        }
+
         const fragment = range.cloneContents();
         const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
         let node = walker.nextNode();
@@ -172,7 +189,6 @@ function bindNoteEvents(clone, noteObj) {
                             document.execCommand(type, false, "transparent");
                             sel.removeAllRanges();
                             sel.addRange(restore);
-
                             break;
                         }
                         node = node.parentNode;
