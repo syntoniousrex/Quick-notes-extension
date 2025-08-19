@@ -113,7 +113,7 @@ function bindNoteEvents(clone, noteObj) {
     const styleButtons = clone.querySelectorAll(".style-actions .action");
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+        if (sel.rangeCount > 0) {
             selectionRange = sel.getRangeAt(0).cloneRange();
         }
     }
@@ -135,16 +135,16 @@ function bindNoteEvents(clone, noteObj) {
                 if (!value) return;
             }
 
+            const sel = window.getSelection();
             bodyInput.focus();
 
             if (selectionRange) {
-                const sel = window.getSelection();
                 sel.removeAllRanges();
                 sel.addRange(selectionRange);
             }
 
             if (type === "hiliteColor") {
-                // If caret only, try to expand to surrounding yellow highlight
+                // If caret is inside an existing highlight, expand to that span
                 if (sel.isCollapsed) {
                     let node = sel.anchorNode;
                     while (node && node !== bodyInput) {
@@ -168,10 +168,10 @@ function bindNoteEvents(clone, noteObj) {
             }
 
             const sel2 = window.getSelection();
-            if (sel2.rangeCount && !sel2.isCollapsed) {
+            if (sel2.rangeCount > 0) {
                 selectionRange = sel2.getRangeAt(0).cloneRange();
             }
-            
+
             saveSelection();
         });
     });
