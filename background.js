@@ -112,52 +112,159 @@ function bindNoteEvents(clone, noteObj) {
     };
 
     const styleButtons = clone.querySelectorAll(".style-actions .action");
+    
     function saveSelection() {
         const sel = window.getSelection();
-        if (sel.rangeCount > 0 && !sel.isCollapsed) {
+        if (sel.rangeCount && !sel.isCollapsed) {
             selectionRange = sel.getRangeAt(0).cloneRange();
         }
     }
 
-    function isHighlighted() {
-        const current = document.queryCommandValue("hiliteColor");
-        return current === "rgb(255, 255, 0)" || current === "yellow";
+    function getMarkAncestor(node) {
+        while (node && node !== bodyInput) {
+            if (node.nodeType === 1 && node.tagName === "MARK") return node;
+            node = node.parentNode;
+        }
+        return null;
     }
 
-    function selectionHasHighlight(range) {
-        function hasHighlight(node) {
-            while (node && node !== bodyInput) {
-                if (node.nodeType === 1) {
-                    const bg = getComputedStyle(node).backgroundColor;
-                    if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
-                        return true;
-                    }
-                }
-                node = node.parentNode;
-            }
-            return false;
-        }
+    function wrapRangeInMark(range) {
+        const frag = range.cloneContents();
+        const mark = document.createElement("mark");
+        mark.appendChild(frag);
+        range.deleteContents();
+        range.insertNode(mark);
 
-        if (hasHighlight(range.startContainer) || hasHighlight(range.endContainer)) {
-            return true;
-        }
-
-        const fragment = range.cloneContents();
-        const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_ELEMENT);
-        let node = walker.nextNode();
-        while (node) {
-            const bg = node.style.backgroundColor;
-            if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
-                return true;
-            }
-            node = walker.nextNode();
-        }
-        return false;
+        // put caret at end of new mark for a natural feel
+        const sel = window.getSelection();
+        const r = document.createRange();
+        r.selectNodeContents(mark);
+        r.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(r);
+        return mark;
     }
-  
+
+    function unwrapMark(el) {
+        if (!el || el.tagName !== "MARK" || !el.parentNode) return;
+        const parent = el.parentNode;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+    }
+
+    function getMarkAtCaret(range) {
+        // 1) If caret is inside a <mark>, return it
+        const inMark = getMarkAncestor(range.startContainer);
+        if (inMark) return inMark;
+
+        // 2) If caret is at a text boundary next to a <mark>, grab that neighbor
+        let container = range.startContainer;
+        let offset = range.startOffset;
+
+        // Normalize to an element and index
+        if (container.nodeType === 3) { // Text node
+            const parent = container.parentNode;
+            if (!parent) return null;
+
+            // Caret at start of text and previous sibling is <mark>
+            if (offset === 0 && parent.previousSibling && parent.previousSibling.nodeType === 1 && parent.previousSibling.tagName === "MARK") {
+            return parent.previousSibling;
+            }
+            // Caret at end of text and next sibling is <mark>
+            if (offset === container.nodeValue.length && parent.nextSibling && parent.nextSibling.nodeType === 1 && parent.nextSibling.tagName === "MARK") {
+            return parent.nextSibling;
+            }
+            // Also check parent itself if it is a <mark>
+            if (parent.nodeType === 1 && parent.tagName === "MARK") return parent;
+            return null;
+        } else if (container.nodeType === 1) { // Element node
+            // If caret is between child nodes, see the neighbor on either side
+            const el = container;
+            const childBefore = el.childNodes[offset - 1] || null;
+            const childAfter  = el.childNodes[offset] || null;
+
+            if (childBefore && childBefore.nodeType === 1 && childBefore.tagName === "MARK") return childBefore;
+            if (childAfter  && childAfter.nodeType === 1 && childAfter.tagName === "MARK") return childAfter;
+
+            // If the element itself is a mark
+            if (el.tagName === "MARK") return el;
+            return null;
+        }
+        return null;
+    }
+
+    function splitMarkAtCaret(range, markEl) {
+        // If the caret isn't actually inside this mark, bail
+        if (!markEl || markEl.tagName !== "MARK") return;
+
+        const sel = window.getSelection();
+
+        // Create a range for the LEFT part (mark start -> caret)
+        const left = document.createRange();
+        left.selectNodeContents(markEl);
+        // Only split if the caret is within the mark's subtree
+        if (!markEl.contains(range.startContainer)) {
+            // Caret not inside the mark—nothing to split
+            return;
+        }
+        left.setEnd(range.startContainer, range.startOffset);
+
+        // Extract LEFT fragment out of the original mark
+        const leftFrag = left.extractContents();
+
+        // Build a new <mark> for the LEFT fragment and insert it before the original mark
+        const leftMark = document.createElement("mark");
+        leftMark.appendChild(leftFrag);
+        markEl.parentNode.insertBefore(leftMark, markEl);
+
+        // The original mark now contains only the RIGHT part (caret -> end).
+        // We want the RIGHT part to be plain text → unwrap the original mark.
+        // Unwrap: move its children out, then remove it.
+        while (markEl.firstChild) {
+            markEl.parentNode.insertBefore(markEl.firstChild, markEl);
+        }
+        markEl.remove();
+
+        // Place the caret just after the preserved LEFT mark
+        const after = document.createTextNode("\u200B");
+        leftMark.parentNode.insertBefore(after, leftMark.nextSibling);
+        const r = document.createRange();
+        r.setStart(after, 0);
+        r.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(r);
+
+        // Clean the zero-width after the next input
+        const cleanup = () => {
+            if (after.parentNode) after.remove();
+            bodyInput.removeEventListener("input", cleanup);
+        };
+        bodyInput.addEventListener("input", cleanup);
+    }
+
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
             e.preventDefault();
+
+            const sel = window.getSelection();
+
+            // keep the editor focused so selection/caret lives in .noteContents
+            bodyInput.focus();
+
+            // if the current selection isn't inside this editor but you have a last real range, restore it
+            const insideEditor = sel.rangeCount && bodyInput.contains(sel.anchorNode);
+            if (!insideEditor && selectionRange) {
+                sel.removeAllRanges();
+                sel.addRange(selectionRange);
+            }
+            // if there's no valid selection in the editor, create a caret at the end
+            if (!sel.rangeCount || !bodyInput.contains(sel.anchorNode)) {
+                const r = document.createRange();
+                r.selectNodeContents(bodyInput);
+                r.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(r);
+            }
             const type = btn.dataset.type;
             if (!type) return;
 
@@ -166,77 +273,52 @@ function bindNoteEvents(clone, noteObj) {
                 value = prompt("Enter a URL");
                 if (!value) return;
             }
-
-            const sel = window.getSelection();
-            bodyInput.focus();
-
-            const selInside = sel.rangeCount && bodyInput.contains(sel.anchorNode);
-            if (selectionRange && !selInside) {
-                sel.removeAllRanges();
-                sel.addRange(selectionRange);
-            }
-
             if (type === "hiliteColor") {
-                const valueOn = btn.dataset.value || "yellow";
-
+                const sel = window.getSelection();
                 if (!sel.rangeCount) return;
 
-                if (!sel.isCollapsed) {
-                    // Selection - toggle based on whether any of the selection is highlighted
-                    const range = sel.getRangeAt(0);
-                    const toggleValue = selectionHasHighlight(range) ? "transparent" : valueOn;
-                    document.execCommand("hiliteColor", false, toggleValue);
-                    hiliteTypingOn = toggleValue !== "transparent";
-                } else {
-                    // Caret-only - decide from caret context, not a global flag
-                    const caretIsHighlighted = isHighlighted();
+                const range = sel.getRangeAt(0);
 
-                    if (!caretIsHighlighted) {
-                    // Turn ON typing highlight at caret
-                    document.execCommand("hiliteColor", false, valueOn);
-                    hiliteTypingOn = true;
+                if (!range.collapsed) {
+                    // Selection: if selection touches a <mark>, unwrap one; else wrap selection
+                    const startMark = getMarkAncestor(range.startContainer);
+                    const endMark   = getMarkAncestor(range.endContainer);
+                    if (startMark || endMark) {
+                        unwrapMark(startMark || endMark);
                     } else {
-                    // Turn OFF and move caret just after the highlighted island
-                    document.execCommand("hiliteColor", false, "transparent");
-                    hiliteTypingOn = false;
-
-                    // Find nearest highlighted ancestor
-                    let node = sel.anchorNode;
-                    let highlightEl = null;
-                    while (node && node !== bodyInput) {
-                        if (node.nodeType === 1) {
-                        const bg = getComputedStyle(node).backgroundColor;
-                        if (bg === "yellow" || bg === "rgb(255, 255, 0)") {
-                            highlightEl = node;
-                            break;
-                        }
-                        }
-                        node = node.parentNode;
+                        wrapRangeInMark(range);
                     }
-
-                    if (highlightEl && highlightEl.parentNode) {
-                        // Insert zero-width marker AFTER the highlight and place caret there
-                        const marker = document.createTextNode("\u200B");
-                        highlightEl.parentNode.insertBefore(marker, highlightEl.nextSibling);
+                } else {
+                    // Caret: toggle inline. If INSIDE a <mark>, split it at the caret.
+                    // If merely ADJACENT to a <mark>, leave the mark alone (we just turn typing off).
+                    const insideMark = getMarkAncestor(range.startContainer);
+                    if (insideMark) {
+                        splitMarkAtCaret(range, insideMark);
+                    } else {
+                        // enter highlight typing: create empty mark and place caret inside
+                        const mark = document.createElement("mark");
+                        const z = document.createTextNode("\u200B"); // caret placeholder
+                        mark.appendChild(z);
+                        range.insertNode(mark);
 
                         const r = document.createRange();
-                        r.setStart(marker, 0);
+                        r.setStart(z, 1);
                         r.collapse(true);
                         sel.removeAllRanges();
                         sel.addRange(r);
 
                         const cleanup = () => {
-                        if (marker.parentNode) marker.remove();
-                        bodyInput.removeEventListener("input", cleanup);
+                            if (z.parentNode && z.nodeValue === "\u200B") z.remove();
+                            bodyInput.removeEventListener("input", cleanup);
                         };
                         bodyInput.addEventListener("input", cleanup);
                     }
-                    }
-                }
+                } 
             } else {
                 document.execCommand(type, false, value);
             }
 
+            // Store current selection so if user selects text and clicks an action, we can restore it above.
             const sel2 = window.getSelection();
             if (sel2.rangeCount > 0 && !sel2.isCollapsed) {
                 selectionRange = sel2.getRangeAt(0).cloneRange();
@@ -256,7 +338,7 @@ function bindNoteEvents(clone, noteObj) {
         styleButtons.forEach((btn) => {
             const type = btn.dataset.type;
             if (type === "hiliteColor") {
-                btn.classList.toggle("active", isHighlighted());
+                btn.classList.toggle("active", !!getMarkAncestor(window.getSelection().anchorNode));
             } else {
                 btn.classList.toggle("active", document.queryCommandState(type));
             }
