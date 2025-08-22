@@ -121,10 +121,32 @@ function bindNoteEvents(clone, noteObj) {
     }
 
     function getMarkAncestor(node) {
+        console.log('getMarkAncestor called with node:', node);
+        let originalNode = node;
         while (node && node !== bodyInput) {
-            if (node.nodeType === 1 && node.tagName === "MARK") return node;
+            if (node.nodeType === 1 && node.tagName === "MARK") {
+                console.log('getMarkAncestor found <mark>:', node);
+                return node;
+            }
             node = node.parentNode;
         }
+        // If not inside a <mark>, check for adjacent <mark> siblings if node is a text node
+        if (originalNode && originalNode.nodeType === 3) {
+            const parent = originalNode.parentNode;
+            if (parent) {
+                // Caret at start of text and previous sibling is <mark>
+                if (originalNode === parent.firstChild && parent.previousSibling && parent.previousSibling.nodeType === 1 && parent.previousSibling.tagName === "MARK") {
+                    console.log('getMarkAncestor found adjacent previous <mark>:', parent.previousSibling);
+                    return parent.previousSibling;
+                }
+                // Caret at end of text and next sibling is <mark>
+                if (originalNode === parent.lastChild && parent.nextSibling && parent.nextSibling.nodeType === 1 && parent.nextSibling.tagName === "MARK") {
+                    console.log('getMarkAncestor found adjacent next <mark>:', parent.nextSibling);
+                    return parent.nextSibling;
+                }
+            }
+        }
+        console.log('getMarkAncestor found nothing');
         return null;
     }
 
@@ -194,59 +216,67 @@ function bindNoteEvents(clone, noteObj) {
     }
 
     function splitMarkAtCaret(range, markEl) {
-        // If the caret isn't actually inside this mark, bail
-        if (!markEl || markEl.tagName !== "MARK") return;
+        console.log('splitMarkAtCaret called');
+        if (!markEl || markEl.tagName !== "MARK") {
+            console.log('No markEl or not a MARK tag');
+            return;
+        }
 
         const sel = window.getSelection();
+        console.log('Current selection:', sel);
+        console.log('markEl:', markEl, 'markEl.textContent:', markEl.textContent);
+
+        if (!markEl.contains(range.startContainer)) {
+            console.log('Caret not inside the mark—nothing to split');
+            return;
+        }
 
         // Create a range for the LEFT part (mark start -> caret)
         const left = document.createRange();
         left.selectNodeContents(markEl);
-        // Only split if the caret is within the mark's subtree
-        if (!markEl.contains(range.startContainer)) {
-            // Caret not inside the mark—nothing to split
-            return;
-        }
         left.setEnd(range.startContainer, range.startOffset);
-
-        // Extract LEFT fragment out of the original mark
         const leftFrag = left.extractContents();
+        console.log('leftFrag:', leftFrag);
 
-        // Build a new <mark> for the LEFT fragment and insert it before the original mark
+        // Create a range for the RIGHT part (caret -> end)
+        const right = document.createRange();
+        right.selectNodeContents(markEl);
+        right.setStart(range.startContainer, range.startOffset);
+        const rightFrag = right.extractContents();
+        console.log('rightFrag:', rightFrag);
+
+        // Build new <mark> for left and right fragments
         const leftMark = document.createElement("mark");
         leftMark.appendChild(leftFrag);
+        const rightMark = document.createElement("mark");
+        rightMark.appendChild(rightFrag);
+        console.log('leftMark:', leftMark, 'rightMark:', rightMark);
+
+        // Insert leftMark, then rightMark, and remove original markEl
         markEl.parentNode.insertBefore(leftMark, markEl);
-
-        // The original mark now contains only the RIGHT part (caret -> end).
-        // We want the RIGHT part to be plain text → unwrap the original mark.
-        // Unwrap: move its children out, then remove it.
-        while (markEl.firstChild) {
-            markEl.parentNode.insertBefore(markEl.firstChild, markEl);
-        }
+        markEl.parentNode.insertBefore(rightMark, leftMark.nextSibling);
         markEl.remove();
+        console.log('Inserted leftMark, rightMark, and removed original markEl');
 
-        // Place the caret just after the preserved LEFT mark
-        const after = document.createTextNode("\u200B");
-        leftMark.parentNode.insertBefore(after, leftMark.nextSibling);
+        // Place the caret between the two marks (at the end of leftMark)
         const r = document.createRange();
-        r.setStart(after, 0);
+        r.setStartAfter(leftMark);
         r.collapse(true);
         sel.removeAllRanges();
         sel.addRange(r);
-
-        // Clean the zero-width after the next input
-        const cleanup = () => {
-            if (after.parentNode) after.remove();
-            bodyInput.removeEventListener("input", cleanup);
-        };
-        bodyInput.addEventListener("input", cleanup);
+        console.log('Caret placed between leftMark and rightMark');
+        console.log('Cleanup event added for caret placeholder');
     }
 
     styleButtons.forEach((btn) => {
         btn.addEventListener("mousedown", (e) => {
+            console.log('--- BEFORE highlight action ---');
+            console.log('bodyInput.innerHTML:', bodyInput.innerHTML);
+            console.log('Style button event fired:', btn, 'event:', e);
             e.preventDefault();
 
             const sel = window.getSelection();
+            console.log('Current selection at event start:', sel, 'anchorNode:', sel.anchorNode, 'focusNode:', sel.focusNode);
 
             // keep the editor focused so selection/caret lives in .noteContents
             bodyInput.focus();
@@ -274,27 +304,72 @@ function bindNoteEvents(clone, noteObj) {
                 if (!value) return;
             }
             if (type === "hiliteColor") {
-                const sel = window.getSelection();
+                // ...existing code...
                 if (!sel.rangeCount) return;
-
                 const range = sel.getRangeAt(0);
-
                 if (!range.collapsed) {
-                    // Selection: if selection touches a <mark>, unwrap one; else wrap selection
-                    const startMark = getMarkAncestor(range.startContainer);
-                    const endMark   = getMarkAncestor(range.endContainer);
-                    if (startMark || endMark) {
-                        unwrapMark(startMark || endMark);
-                    } else {
-                        wrapRangeInMark(range);
+                    // Expand selection to fully cover any partially selected <mark> tags
+                    let selStart = range.startContainer, selEnd = range.endContainer;
+                    let selStartOffset = range.startOffset, selEndOffset = range.endOffset;
+                    let startMark = getMarkAncestor(selStart), endMark = getMarkAncestor(selEnd);
+                    let expandedRange = range.cloneRange();
+                    if (startMark) {
+                        expandedRange.setStartBefore(startMark);
                     }
+                    if (endMark) {
+                        expandedRange.setEndAfter(endMark);
+                    }
+                    // Unwrap all <mark> tags in expanded selection
+                    const contents = expandedRange.cloneContents();
+                    Array.from(contents.querySelectorAll('mark')).forEach(mark => {
+                        while (mark.firstChild) {
+                            mark.parentNode.insertBefore(mark.firstChild, mark);
+                        }
+                        mark.remove();
+                    });
+                    expandedRange.deleteContents();
+                    expandedRange.insertNode(contents);
+
+                    // If toggling on, wrap selection in a new <mark>
+                    wrapRangeInMark(expandedRange);
                 } else {
-                    // Caret: toggle inline. If INSIDE a <mark>, split it at the caret.
-                    // If merely ADJACENT to a <mark>, leave the mark alone (we just turn typing off).
+                    // Caret: if INSIDE a <mark>, split it. If not, create a new <mark>.
                     const insideMark = getMarkAncestor(range.startContainer);
+                    console.log('Highlight button pressed with caret. range:', range, 'range.startContainer:', range.startContainer);
+                    console.log('Result of getMarkAncestor:', insideMark);
+                    // Check for adjacent <mark> (from improved getMarkAncestor)
+                    let adjacentMark = null;
+                    if (!insideMark && range.startContainer.nodeType === 1) {
+                        // If caret is at a text boundary, check previous sibling
+                        const el = range.startContainer;
+                        const offset = range.startOffset;
+                        if (el.childNodes[offset - 1] && el.childNodes[offset - 1].nodeType === 1 && el.childNodes[offset - 1].tagName === "MARK") {
+                            adjacentMark = el.childNodes[offset - 1];
+                        }
+                    }
                     if (insideMark) {
+                        console.log('Caret is inside a <mark> before split. bodyInput.innerHTML:', bodyInput.innerHTML);
+                        console.log('Splitting mark at caret:', insideMark);
                         splitMarkAtCaret(range, insideMark);
+                    } else if (adjacentMark) {
+                        console.log('Caret is adjacent to a <mark> before move. bodyInput.innerHTML:', bodyInput.innerHTML);
+
+                        console.log('Caret adjacent to <mark>, moving caret outside to end highlight block:', adjacentMark);
+                        // Move caret after the <mark> and insert a plain text node so typing continues in plain text
+                        // Insert a zero-width space after the <mark> and place caret inside it
+                        const zws = document.createTextNode("\u200B");
+                        if (adjacentMark.nextSibling) {
+                            adjacentMark.parentNode.insertBefore(zws, adjacentMark.nextSibling);
+                        } else {
+                            adjacentMark.parentNode.appendChild(zws);
+                        }
+                        const r = document.createRange();
+                        r.setStart(zws, 1);
+                        r.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
                     } else {
+                        console.log('Caret not inside or adjacent to a <mark>, creating new <mark>');
                         // enter highlight typing: create empty mark and place caret inside
                         const mark = document.createElement("mark");
                         const z = document.createTextNode("\u200B"); // caret placeholder
@@ -306,19 +381,15 @@ function bindNoteEvents(clone, noteObj) {
                         r.collapse(true);
                         sel.removeAllRanges();
                         sel.addRange(r);
-
-                        const cleanup = () => {
-                            if (z.parentNode && z.nodeValue === "\u200B") z.remove();
-                            bodyInput.removeEventListener("input", cleanup);
-                        };
-                        bodyInput.addEventListener("input", cleanup);
                     }
-                } 
+                }
             } else {
                 document.execCommand(type, false, value);
             }
 
             // Store current selection so if user selects text and clicks an action, we can restore it above.
+            console.log('--- AFTER highlight action ---');
+            console.log('bodyInput.innerHTML:', bodyInput.innerHTML);
             const sel2 = window.getSelection();
             if (sel2.rangeCount > 0 && !sel2.isCollapsed) {
                 selectionRange = sel2.getRangeAt(0).cloneRange();
