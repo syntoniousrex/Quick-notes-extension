@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+* text=auto
+*.sh text eol=lf
+.husky/* text eol=lf
+.gitattributes text eol=lf
