@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Keep scripts/hooks as LF so shells don’t choke
+*.sh text eol=lf
+.husky/* text eol=lf
+.gitattributes text eol=lf

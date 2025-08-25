@@ -1,0 +1,31 @@
+{
+  "name": "quick-notes-extension",
+  "version": "1.0.0",
+  "description": "Quick Notes is a minimalist Chrome extension for jotting down and organizing sticky notes directly in your browser. Notes are stored using Chrome's sync storage so they're available across devices.",
+  "main": "background.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syntoniousrex/Quick-notes-extension.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/syntoniousrex/Quick-notes-extension/issues"
+  },
+  "homepage": "https://github.com/syntoniousrex/Quick-notes-extension#readme",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5"
+  }
+}
