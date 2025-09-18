@@ -231,28 +231,36 @@ function bindNoteEvents(clone, noteObj) {
             return;
         }
 
-        // Create a range for the LEFT part (mark start -> caret)
+        // If caret is at the very start, unwrap the mark
+        if (range.startContainer === markEl.firstChild && range.startOffset === 0) {
+            unwrapMark(markEl);
+            return;
+        }
+        // If caret is at the very end, unwrap the mark
+        if (range.startContainer === markEl.lastChild && range.startOffset === markEl.lastChild.length) {
+            unwrapMark(markEl);
+            return;
+        }
+
+        // Otherwise, split the mark
         const left = document.createRange();
         left.selectNodeContents(markEl);
         left.setEnd(range.startContainer, range.startOffset);
         const leftFrag = left.extractContents();
         console.log('leftFrag:', leftFrag);
 
-        // Create a range for the RIGHT part (caret -> end)
         const right = document.createRange();
         right.selectNodeContents(markEl);
         right.setStart(range.startContainer, range.startOffset);
         const rightFrag = right.extractContents();
         console.log('rightFrag:', rightFrag);
 
-        // Build new <mark> for left and right fragments
         const leftMark = document.createElement("mark");
         leftMark.appendChild(leftFrag);
         const rightMark = document.createElement("mark");
         rightMark.appendChild(rightFrag);
         console.log('leftMark:', leftMark, 'rightMark:', rightMark);
 
-        // Insert leftMark, then rightMark, and remove original markEl
         markEl.parentNode.insertBefore(leftMark, markEl);
         markEl.parentNode.insertBefore(rightMark, leftMark.nextSibling);
         markEl.remove();
@@ -265,7 +273,6 @@ function bindNoteEvents(clone, noteObj) {
         sel.removeAllRanges();
         sel.addRange(r);
         console.log('Caret placed between leftMark and rightMark');
-        console.log('Cleanup event added for caret placeholder');
     }
 
     styleButtons.forEach((btn) => {
