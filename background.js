@@ -317,7 +317,6 @@ function bindNoteEvents(clone, noteObj) {
                 if (!range.collapsed) {
                     // Expand selection to fully cover any partially selected <mark> tags
                     let selStart = range.startContainer, selEnd = range.endContainer;
-                    let selStartOffset = range.startOffset, selEndOffset = range.endOffset;
                     let startMark = getMarkAncestor(selStart), endMark = getMarkAncestor(selEnd);
                     let expandedRange = range.cloneRange();
                     if (startMark) {
